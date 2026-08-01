@@ -10,7 +10,7 @@ function App() {
 
   return (
     <Router>
-      <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col">
+      <div className="min-h-screen bg-pastel-bg text-slate-800 flex flex-col font-sans transition-colors duration-300">
         {user && <Navbar />}
         <main className="flex-1 container mx-auto p-4 max-w-6xl">
           <Routes>
