@@ -1,6 +1,7 @@
 import app from './app.js';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
+import { startCronJobs } from './jobs/reorderReminderJob.js';
 
 dotenv.config();
 
@@ -13,6 +14,7 @@ mongoose.connect(MONGODB_URI)
     console.log('Connected to MongoDB');
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
+      startCronJobs();
     });
   })
   .catch((error) => {

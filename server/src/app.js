@@ -9,6 +9,8 @@ import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import productRoutes from './routes/productRoutes.js';
 import ingredientRoutes from './routes/ingredientRoutes.js';
+import routineRoutes from './routes/routineRoutes.js';
+import inventoryRoutes from './routes/inventoryRoutes.js';
 
 const app = express();
 
@@ -31,6 +33,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/ingredients', ingredientRoutes);
+app.use('/api/routines', routineRoutes);
+app.use('/api/inventory', inventoryRoutes);
 
 // Default route
 app.get('/', (req, res) => {
