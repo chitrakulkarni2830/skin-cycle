@@ -4,6 +4,11 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import mongoSanitize from 'express-mongo-sanitize';
 import rateLimit from 'express-rate-limit';
+import { errorHandler } from './middleware/errorHandler.js';
+import authRoutes from './routes/authRoutes.js';
+import userRoutes from './routes/userRoutes.js';
+import productRoutes from './routes/productRoutes.js';
+import ingredientRoutes from './routes/ingredientRoutes.js';
 
 const app = express();
 
@@ -22,17 +27,17 @@ const apiLimiter = rateLimit({
 });
 app.use('/api/', apiLimiter);
 
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/ingredients', ingredientRoutes);
+
 // Default route
 app.get('/', (req, res) => {
   res.json({ message: 'SkinCycle API is running' });
 });
 
 // Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  const status = err.statusCode || 500;
-  const message = err.message || 'Internal Server Error';
-  res.status(status).json({ error: message });
-});
+app.use(errorHandler);
 
 export default app;
