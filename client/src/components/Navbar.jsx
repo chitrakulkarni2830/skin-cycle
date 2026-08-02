@@ -2,6 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout, reset } from '../store/authSlice';
 import { Droplets, LogOut, LayoutDashboard, PlusCircle } from 'lucide-react';
+import logo from '../assets/logo.png';
 
 function Navbar() {
   const dispatch = useDispatch();
@@ -19,7 +20,7 @@ function Navbar() {
       <div className="container mx-auto px-4 max-w-6xl">
         <div className="flex items-center justify-between h-16">
           <Link to="/" className="flex items-center space-x-2 group">
-            <Droplets className="h-6 w-6 text-pastel-mint group-hover:text-pastel-blue transition-colors drop-shadow-sm" />
+            <img src={logo} alt="SkinCycle Logo" className="h-10 w-10 object-contain rounded-full drop-shadow-sm group-hover:scale-105 transition-transform bg-white" />
             <span className="text-xl font-bold text-slate-800 transition-colors">SkinCycle</span>
           </Link>
           

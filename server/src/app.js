@@ -18,7 +18,7 @@ const app = express();
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
-app.use(mongoSanitize());
+// app.use(mongoSanitize()); // Removed because it crashes in Express 5 by attempting to reassign req.query
 app.use(morgan('dev'));
 
 // Rate limiting
