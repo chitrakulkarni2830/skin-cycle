@@ -141,7 +141,7 @@ function RoutineBuilder() {
   useEffect(() => {
     dispatch(getRoutines());
     
-    axios.get('/api/products')
+    axios.get('/api/products?limit=100')
       .then(res => setProducts(res.data.data))
       .catch(err => console.error(err));
       
