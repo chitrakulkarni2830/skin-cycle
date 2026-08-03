@@ -3,7 +3,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { getInventory, resetInventory } from '../store/inventorySlice';
 import { Package, AlertCircle } from 'lucide-react';
 import AddProductModal from '../components/AddProductModal';
-import TodaysRoutineWidget from '../components/TodaysRoutineWidget';
 import { getRoutines } from '../store/routineSlice';
 
 function Dashboard() {
@@ -38,9 +37,6 @@ function Dashboard() {
           + Add Product
         </button>
       </div>
-
-      <TodaysRoutineWidget routines={routines} />
-
 
       {items.length === 0 ? (
         <div className="bg-white border border-pastel-card-alt rounded-xl p-10 text-center shadow-sm">
@@ -85,13 +81,7 @@ function Dashboard() {
                   </div>
                 </div>
 
-                <div className="text-sm text-slate-500">
-                  <p>Est. Depletion: {item.estimatedDepletionDate ? new Date(item.estimatedDepletionDate).toLocaleDateString() : 'N/A'}</p>
                 </div>
-                
-                <button className="mt-4 w-full py-2 bg-pastel-bg hover:bg-pastel-card-alt text-slate-700 border border-pastel-card-alt rounded-lg transition-colors text-sm font-medium">
-                  Log Usage
-                </button>
               </div>
             );
           })}
