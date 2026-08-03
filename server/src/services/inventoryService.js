@@ -59,6 +59,8 @@ export class InventoryService {
       reorderThresholdDays
     });
 
+    await item.populate('productId');
+
     return item;
   }
 
