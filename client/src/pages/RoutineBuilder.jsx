@@ -1,8 +1,123 @@
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getRoutines, createRoutine, resetRoutines } from '../store/routineSlice';
-import { AlertTriangle, Plus, Sun, Moon } from 'lucide-react';
+import { AlertTriangle, Plus, Sun, Moon, GripVertical } from 'lucide-react';
 import axios from 'axios';
+import { 
+  DndContext, 
+  closestCenter, 
+  KeyboardSensor, 
+  PointerSensor, 
+  useSensor, 
+  useSensors,
+  DragOverlay,
+  defaultDropAnimationSideEffects
+} from '@dnd-kit/core';
+import { 
+  arrayMove, 
+  SortableContext, 
+  sortableKeyboardCoordinates, 
+  verticalListSortingStrategy,
+  useSortable
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { useDraggable, useDroppable } from '@dnd-kit/core';
+
+// --- Subcomponents for Drag and Drop ---
+
+function DraggableProduct({ product, onAdd }) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: `library-${product._id}`,
+    data: { product }
+  });
+
+  return (
+    <div 
+      ref={setNodeRef} 
+      {...listeners} 
+      {...attributes}
+      className={`flex items-center justify-between bg-white p-3 rounded-lg border border-pastel-card-alt shadow-sm cursor-grab hover:shadow-md transition-all ${isDragging ? 'opacity-50' : ''}`}
+    >
+      <div>
+        <p className="text-xs text-slate-500 font-semibold uppercase">{product.brand}</p>
+        <p className="text-sm font-bold text-slate-800">{product.name}</p>
+        <p className="text-xs text-slate-500 truncate max-w-[150px]">{product.activeIngredients?.join(', ')}</p>
+      </div>
+      <button 
+        onPointerDown={(e) => e.stopPropagation()} // Prevent drag start when clicking add
+        onClick={() => onAdd(product)}
+        className="text-pastel-mint hover:text-emerald-500 p-1 bg-pastel-mint-light/50 rounded-full transition-colors z-10 relative"
+      >
+        <Plus className="h-5 w-5" />
+      </button>
+    </div>
+  );
+}
+
+function SortableStep({ product, index, onRemove }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging
+  } = useSortable({ id: product._id, data: { product } });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0 : 1, // hide original while dragging
+  };
+
+  return (
+    <div 
+      ref={setNodeRef} 
+      style={style} 
+      className="flex items-center bg-white p-3 rounded-lg border border-pastel-card-alt shadow-sm relative group"
+    >
+      <div 
+        {...attributes} 
+        {...listeners} 
+        className="cursor-grab hover:text-pastel-blue text-slate-400 mr-2"
+      >
+        <GripVertical className="h-5 w-5" />
+      </div>
+      <div className="bg-pastel-bg text-slate-600 w-6 h-6 rounded-full flex items-center justify-center text-xs mr-3 font-bold border border-pastel-card-alt shrink-0">
+        {index + 1}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-bold text-slate-800 truncate">{product.name}</p>
+        <p className="text-xs text-slate-500 truncate">{product.brand}</p>
+      </div>
+      <button 
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={() => onRemove(product._id)}
+        className="text-pastel-pink hover:text-red-500 text-xs px-2 opacity-0 group-hover:opacity-100 transition-opacity font-medium shrink-0 z-10 relative"
+      >
+        Remove
+      </button>
+    </div>
+  );
+}
+
+function DroppableSteps({ children }) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: 'routine-steps-droppable',
+  });
+
+  return (
+    <div 
+      ref={setNodeRef} 
+      className={`space-y-3 rounded-xl transition-all ${isOver ? 'bg-pastel-blue-light/10 ring-2 ring-pastel-blue ring-inset' : ''}`}
+      style={{ minHeight: '150px' }}
+    >
+      {children}
+    </div>
+  );
+}
+
+// --- Main Component ---
 
 function RoutineBuilder() {
   const dispatch = useDispatch();
@@ -13,8 +128,15 @@ function RoutineBuilder() {
   const [newRoutineName, setNewRoutineName] = useState('');
   const [newRoutineTime, setNewRoutineTime] = useState('PM');
   const [selectedProducts, setSelectedProducts] = useState([]);
-  const [liveConflicts, setLiveConflicts] = useState([]);
-  const [isCheckingConflicts, setIsCheckingConflicts] = useState(false);
+  
+  // Drag and drop state
+  const [activeId, setActiveId] = useState(null);
+  const [activeProduct, setActiveProduct] = useState(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
 
   useEffect(() => {
     dispatch(getRoutines());
@@ -26,13 +148,6 @@ function RoutineBuilder() {
     return () => dispatch(resetRoutines());
   }, [dispatch]);
 
-  useEffect(() => {
-    if (selectedProducts.length < 2) {
-      setLiveConflicts([]);
-      return;
-    }
-  }, [selectedProducts]);
-
   const handleAddProduct = (product) => {
     if (!selectedProducts.find(p => p._id === product._id)) {
       setSelectedProducts([...selectedProducts, product]);
@@ -41,6 +156,47 @@ function RoutineBuilder() {
 
   const handleRemoveProduct = (productId) => {
     setSelectedProducts(selectedProducts.filter(p => p._id !== productId));
+  };
+
+  const handleDragStart = (event) => {
+    const { active } = event;
+    setActiveId(active.id);
+    setActiveProduct(active.data.current?.product);
+  };
+
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+    setActiveId(null);
+    setActiveProduct(null);
+
+    if (!over) return;
+
+    if (String(active.id).startsWith('library-')) {
+      // Dropped from library
+      if (over.id === 'routine-steps-droppable' || selectedProducts.find(p => p._id === over.id)) {
+        const product = active.data.current.product;
+        if (!selectedProducts.find(p => p._id === product._id)) {
+          if (over.id !== 'routine-steps-droppable') {
+            const overIndex = selectedProducts.findIndex(p => p._id === over.id);
+            const newSelected = [...selectedProducts];
+            // Insert at the dragged over position
+            newSelected.splice(overIndex, 0, product);
+            setSelectedProducts(newSelected);
+          } else {
+            setSelectedProducts([...selectedProducts, product]);
+          }
+        }
+      }
+    } else {
+      // Sorting within steps
+      if (active.id !== over.id) {
+        setSelectedProducts((items) => {
+          const oldIndex = items.findIndex(p => p._id === active.id);
+          const newIndex = items.findIndex(p => p._id === over.id);
+          return arrayMove(items, oldIndex, newIndex);
+        });
+      }
+    }
   };
 
   const handleSaveRoutine = () => {
@@ -57,6 +213,7 @@ function RoutineBuilder() {
       setIsBuilding(false);
       setNewRoutineName('');
       setSelectedProducts([]);
+      dispatch(getRoutines()); // refresh conflicts
     });
   };
 
@@ -108,58 +265,70 @@ function RoutineBuilder() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Product Library */}
-            <div className="bg-pastel-bg rounded-xl p-4 border border-pastel-card-alt">
-              <h3 className="font-semibold text-slate-700 mb-4">Product Library</h3>
-              <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
-                {products.map(product => (
-                  <div key={product._id} className="flex items-center justify-between bg-white p-3 rounded-lg border border-pastel-card-alt shadow-sm">
-                    <div>
-                      <p className="text-xs text-slate-500 font-semibold uppercase">{product.brand}</p>
-                      <p className="text-sm font-bold text-slate-800">{product.name}</p>
-                      <p className="text-xs text-slate-500">{product.activeIngredients.join(', ')}</p>
+          <DndContext 
+            sensors={sensors} 
+            collisionDetection={closestCenter} 
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+          >
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Product Library */}
+              <div className="bg-pastel-bg rounded-xl p-4 border border-pastel-card-alt">
+                <h3 className="font-semibold text-slate-700 mb-4">Product Library</h3>
+                <p className="text-xs text-slate-500 mb-3">Drag items to your routine or click +</p>
+                <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
+                  {products?.map(product => (
+                    <DraggableProduct 
+                      key={`lib-${product._id}`} 
+                      product={product} 
+                      onAdd={handleAddProduct} 
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Current Steps */}
+              <div>
+                <h3 className="font-semibold text-slate-700 mb-4">Routine Steps</h3>
+                <DroppableSteps>
+                  {selectedProducts.length === 0 ? (
+                    <div className="h-32 flex items-center justify-center border-2 border-dashed border-pastel-card-alt bg-pastel-bg/50 rounded-xl text-slate-500 text-sm">
+                      Drag products here to build your routine
                     </div>
-                    <button 
-                      onClick={() => handleAddProduct(product)}
-                      className="text-pastel-mint hover:text-emerald-500 p-1 bg-pastel-mint-light/50 rounded-full transition-colors"
+                  ) : (
+                    <SortableContext 
+                      items={selectedProducts.map(p => p._id)} 
+                      strategy={verticalListSortingStrategy}
                     >
-                      <Plus className="h-5 w-5" />
-                    </button>
-                  </div>
-                ))}
+                      {selectedProducts?.map((product, index) => (
+                        <SortableStep 
+                          key={`step-${product._id}`}
+                          product={product}
+                          index={index}
+                          onRemove={handleRemoveProduct}
+                        />
+                      ))}
+                    </SortableContext>
+                  )}
+                </DroppableSteps>
               </div>
             </div>
 
-            {/* Current Steps */}
-            <div>
-              <h3 className="font-semibold text-slate-700 mb-4">Routine Steps</h3>
-              {selectedProducts.length === 0 ? (
-                <div className="h-32 flex items-center justify-center border-2 border-dashed border-pastel-card-alt bg-pastel-bg/50 rounded-xl text-slate-500 text-sm">
-                  Add products to build your routine
+            {/* Drag Overlay for smooth animations */}
+            <DragOverlay dropAnimation={defaultDropAnimationSideEffects({ sideEffects: defaultDropAnimationSideEffects({ styles: { active: { opacity: '0.4' } } }) })}>
+              {activeId ? (
+                <div className="flex items-center bg-white p-3 rounded-lg border border-pastel-blue shadow-xl rotate-2 scale-105 opacity-90">
+                  <div className="text-slate-400 mr-2">
+                    <GripVertical className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-slate-800">{activeProduct?.name}</p>
+                    <p className="text-xs text-slate-500">{activeProduct?.brand}</p>
+                  </div>
                 </div>
-              ) : (
-                <div className="space-y-3">
-                  {selectedProducts.map((product, index) => (
-                    <div key={product._id} className="flex items-center bg-white p-3 rounded-lg border border-pastel-card-alt shadow-sm relative group">
-                      <div className="bg-pastel-bg text-slate-600 w-6 h-6 rounded-full flex items-center justify-center text-xs mr-3 font-bold border border-pastel-card-alt">
-                        {index + 1}
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-bold text-slate-800">{product.name}</p>
-                      </div>
-                      <button 
-                        onClick={() => handleRemoveProduct(product._id)}
-                        className="text-pastel-pink hover:text-red-500 text-xs px-2 opacity-0 group-hover:opacity-100 transition-opacity font-medium"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
+              ) : null}
+            </DragOverlay>
+          </DndContext>
 
           <div className="mt-8 flex justify-end space-x-4">
             <button 
@@ -181,7 +350,7 @@ function RoutineBuilder() {
 
       {/* Saved Routines */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {routines.map(routine => (
+        {routines?.map(routine => (
           <div key={routine._id} className="bg-white border border-pastel-card-alt rounded-xl p-6 shadow-md">
             <div className="flex justify-between items-start mb-6">
               <div>
