@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { getInventory, resetInventory } from '../store/inventorySlice';
-import { Package, AlertCircle } from 'lucide-react';
+import { getInventory, resetInventory, removeInventory } from '../store/inventorySlice';
+import { Package, Trash2 } from 'lucide-react';
 import AddProductModal from '../components/AddProductModal';
 import { getRoutines } from '../store/routineSlice';
 
@@ -56,6 +56,13 @@ function Dashboard() {
                     <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">{product.brand}</span>
                     <h3 className="text-xl font-bold text-slate-800">{product.name}</h3>
                   </div>
+                  <button 
+                    onClick={() => dispatch(removeInventory(item._id))}
+                    className="text-slate-400 hover:text-red-500 transition-colors p-1 rounded-md hover:bg-red-50"
+                    title="Remove from inventory"
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </button>
                 </div>
               </div>
             );

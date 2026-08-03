@@ -25,9 +25,18 @@ export const getInventory = createAsyncThunk('inventory/getAll', async (_, thunk
 export const addInventory = createAsyncThunk('inventory/add', async (inventoryData, thunkAPI) => {
   try {
     const response = await axios.post(API_URL, inventoryData, getAxiosConfig(thunkAPI));
-    return response.data.data;
+    return response.data.item;
   } catch (error) {
     return thunkAPI.rejectWithValue(error.response?.data?.error?.message || 'Failed to add inventory');
+  }
+});
+
+export const removeInventory = createAsyncThunk('inventory/remove', async (id, thunkAPI) => {
+  try {
+    await axios.delete(`${API_URL}/${id}`, getAxiosConfig(thunkAPI));
+    return id;
+  } catch (error) {
+    return thunkAPI.rejectWithValue(error.response?.data?.error?.message || 'Failed to remove inventory');
   }
 });
 
@@ -85,6 +94,9 @@ const inventorySlice = createSlice({
         state.isLoading = false;
         state.isError = true;
         state.message = action.payload;
+      })
+      .addCase(removeInventory.fulfilled, (state, action) => {
+        state.items = state.items.filter((item) => item._id !== action.payload);
       })
       .addCase(getReminders.fulfilled, (state, action) => {
         state.reminders = action.payload;

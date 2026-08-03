@@ -101,4 +101,10 @@ export class InventoryService {
     await item.save();
     return item;
   }
+
+  static async removeOwnedProduct(itemId, userId) {
+    const item = await InventoryItem.findOneAndDelete({ _id: itemId, userId });
+    if (!item) throw new NotFoundError('Inventory item not found');
+    return item;
+  }
 }

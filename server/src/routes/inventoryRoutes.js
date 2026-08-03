@@ -10,6 +10,7 @@ router.use(protect); // All inventory routes are protected
 
 router.get('/', InventoryController.getInventory);
 router.post('/', validate(addInventorySchema), InventoryController.addOwnedProduct);
+router.delete('/:id', InventoryController.removeOwnedProduct);
 router.patch('/:id/log-usage', validate(logUsageSchema), InventoryController.logUsage);
 router.get('/reminders', InventoryController.getReminders);
 

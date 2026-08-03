@@ -36,4 +36,13 @@ export class InventoryController {
       next(error);
     }
   }
+
+  static async removeOwnedProduct(req, res, next) {
+    try {
+      const item = await InventoryService.removeOwnedProduct(req.params.id, req.user.id);
+      res.status(200).json({ message: 'Product removed from inventory', item });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
