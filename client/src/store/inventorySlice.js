@@ -18,7 +18,16 @@ export const getInventory = createAsyncThunk('inventory/getAll', async (_, thunk
     const response = await axios.get(API_URL, getAxiosConfig(thunkAPI));
     return response.data;
   } catch (error) {
-    return thunkAPI.rejectWithValue(error.response.data.error.message || 'Failed to fetch inventory');
+    return thunkAPI.rejectWithValue(error.response?.data?.error?.message || 'Failed to fetch inventory');
+  }
+});
+
+export const addInventory = createAsyncThunk('inventory/add', async (inventoryData, thunkAPI) => {
+  try {
+    const response = await axios.post(API_URL, inventoryData, getAxiosConfig(thunkAPI));
+    return response.data.data;
+  } catch (error) {
+    return thunkAPI.rejectWithValue(error.response?.data?.error?.message || 'Failed to add inventory');
   }
 });
 
@@ -60,6 +69,19 @@ const inventorySlice = createSlice({
         state.items = action.payload.data;
       })
       .addCase(getInventory.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
+      })
+      .addCase(addInventory.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(addInventory.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.items.push(action.payload);
+      })
+      .addCase(addInventory.rejected, (state, action) => {
         state.isLoading = false;
         state.isError = true;
         state.message = action.payload;

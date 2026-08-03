@@ -1,9 +1,11 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getInventory, resetInventory } from '../store/inventorySlice';
 import { Package, AlertCircle } from 'lucide-react';
+import AddProductModal from '../components/AddProductModal';
 
 function Dashboard() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const dispatch = useDispatch();
   const { items, isLoading, isError, message } = useSelector((state) => state.inventory);
 
@@ -25,7 +27,10 @@ function Dashboard() {
     <div className="py-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-slate-800">Your Inventory</h1>
-        <button className="bg-pastel-mint hover:bg-pastel-mint-light text-slate-800 px-4 py-2 rounded-lg font-medium shadow-sm transition-colors border border-pastel-mint">
+        <button 
+          onClick={() => setIsModalOpen(true)}
+          className="bg-pastel-mint hover:bg-pastel-mint-light text-slate-800 px-4 py-2 rounded-lg font-medium shadow-sm transition-colors border border-pastel-mint"
+        >
           + Add Product
         </button>
       </div>
@@ -85,6 +90,11 @@ function Dashboard() {
           })}
         </div>
       )}
+
+      <AddProductModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+      />
     </div>
   );
 }
