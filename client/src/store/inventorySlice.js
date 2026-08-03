@@ -15,7 +15,7 @@ const getAxiosConfig = (thunkAPI) => {
 
 export const getInventory = createAsyncThunk('inventory/getAll', async (_, thunkAPI) => {
   try {
-    const response = await axios.get(API_URL, getAxiosConfig(thunkAPI));
+    const response = await axios.get(`${API_URL}?limit=100`, getAxiosConfig(thunkAPI));
     return response.data;
   } catch (error) {
     return thunkAPI.rejectWithValue(error.response?.data?.error?.message || 'Failed to fetch inventory');
