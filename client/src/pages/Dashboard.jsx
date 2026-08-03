@@ -3,17 +3,21 @@ import { useDispatch, useSelector } from 'react-redux';
 import { getInventory, resetInventory } from '../store/inventorySlice';
 import { Package, AlertCircle } from 'lucide-react';
 import AddProductModal from '../components/AddProductModal';
+import TodaysRoutineWidget from '../components/TodaysRoutineWidget';
+import { getRoutines } from '../store/routineSlice';
 
 function Dashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const dispatch = useDispatch();
   const { items, isLoading, isError, message } = useSelector((state) => state.inventory);
+  const { routines } = useSelector((state) => state.routines);
 
   useEffect(() => {
     if (isError) {
       console.error(message);
     }
     dispatch(getInventory());
+    dispatch(getRoutines());
     return () => {
       dispatch(resetInventory());
     };
@@ -35,6 +39,9 @@ function Dashboard() {
         </button>
       </div>
 
+      <TodaysRoutineWidget routines={routines} />
+
+
       {items.length === 0 ? (
         <div className="bg-white border border-pastel-card-alt rounded-xl p-10 text-center shadow-sm">
           <Package className="h-16 w-16 mx-auto text-pastel-blue mb-4" />
@@ -43,9 +50,9 @@ function Dashboard() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {items.map((item) => {
-            const product = item.productId;
-            const percentRemaining = (item.volumeRemainingMl / product.volumeMl) * 100;
+          {items?.map((item) => {
+            const product = item?.productId;
+            const percentRemaining = (item?.volumeRemainingMl / product?.volumeMl) * 100;
             const isLow = percentRemaining < 20;
 
             return (
