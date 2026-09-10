@@ -3,6 +3,9 @@ import { useSelector } from 'react-redux';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import RoutineBuilder from './pages/RoutineBuilder';
+import Inventory from './pages/Inventory';
+import ProductCatalog from './pages/ProductCatalog';
+import Profile from './pages/Profile';
 import Navbar from './components/Navbar';
 
 function App() {
@@ -25,7 +28,10 @@ function App() {
             <Routes>
               <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
               <Route path="/" element={user ? <Dashboard /> : <Navigate to="/login" />} />
+              <Route path="/inventory" element={user ? <Inventory /> : <Navigate to="/login" />} />
+              <Route path="/products" element={user ? <ProductCatalog /> : <Navigate to="/login" />} />
               <Route path="/routine" element={user ? <RoutineBuilder /> : <Navigate to="/login" />} />
+              <Route path="/profile" element={user ? <Profile /> : <Navigate to="/login" />} />
             </Routes>
           </main>
         </div>
@@ -35,3 +41,4 @@ function App() {
 }
 
 export default App;
+
