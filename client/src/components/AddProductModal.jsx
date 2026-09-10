@@ -19,10 +19,10 @@ function AddProductModal({ isOpen, onClose }) {
 
   if (!isOpen) return null;
 
-  const filteredProducts = products.filter(product => 
+  const filteredProducts = products?.filter(product => 
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
     product.brand.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ) || [];
 
   const handleAddProduct = (productId) => {
     dispatch(addInventory({ productId })).then((action) => {

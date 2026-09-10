@@ -7,9 +7,12 @@ export const validate = (schema) => (req, res, next) => {
       query: req.query,
       params: req.params,
     });
-    next();
   } catch (error) {
-    const message = error.errors.map(err => `${err.path.join('.')}: ${err.message}`).join(', ');
-    next(new ValidationError(message));
+    if (error.issues) {
+      const message = error.issues.map(err => `${err.path.join('.')}: ${err.message}`).join(', ');
+      return next(new ValidationError(message));
+    }
+    return next(error);
   }
+  next();
 };
