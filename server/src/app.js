@@ -12,10 +12,24 @@ import ingredientRoutes from './routes/ingredientRoutes.js';
 import routineRoutes from './routes/routineRoutes.js';
 import inventoryRoutes from './routes/inventoryRoutes.js';
 
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const clientDistPath = path.resolve(__dirname, '../../client/dist');
+const hasClientBuild = fs.existsSync(clientDistPath);
+
 const app = express();
 
 // Security and utility middleware
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
+  })
+);
 app.use(cors());
 app.use(express.json());
 // app.use(mongoSanitize()); // Removed because it crashes in Express 5 by attempting to reassign req.query
@@ -36,10 +50,22 @@ app.use('/api/ingredients', ingredientRoutes);
 app.use('/api/routines', routineRoutes);
 app.use('/api/inventory', inventoryRoutes);
 
-// Default route
-app.get('/', (req, res) => {
-  res.json({ message: 'SkinCycle API is running' });
-});
+// Serve static frontend assets and handle SPA routing
+if (hasClientBuild) {
+  app.use(express.static(clientDistPath));
+
+  app.use((req, res, next) => {
+    if (req.method === 'GET' && !req.path.startsWith('/api')) {
+      return res.sendFile(path.join(clientDistPath, 'index.html'));
+    }
+    next();
+  });
+} else {
+  // Default route when running backend without client build
+  app.get('/', (req, res) => {
+    res.json({ message: 'SkinCycle API is running' });
+  });
+}
 
 // Error handling middleware
 app.use(errorHandler);

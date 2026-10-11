@@ -123,3 +123,37 @@ skin-cycle/
 | GET | `/api/inventory/reminders` | Get reorder reminders |
 | GET | `/api/routines` | Get user routines |
 | POST | `/api/routines` | Create a routine (with conflict check) |
+
+## Deployment on Render
+
+This project is configured for deployment as a unified full-stack web service on [Render](https://render.com).
+
+### Step 1: Push your code to GitHub
+Ensure all changes are pushed to your GitHub repository:
+```bash
+git add .
+git commit -m "Configure full-stack deployment for Render"
+git push origin main
+```
+
+### Step 2: Set up MongoDB Atlas
+1. Create a free cluster on [MongoDB Atlas](https://www.mongodb.com/atlas).
+2. Under **Network Access**, allow access from anywhere (`0.0.0.0/0`).
+3. Under **Database Access**, create a database user and note the password.
+4. Copy your connection string (e.g. `mongodb+srv://<user>:<password>@cluster0.mongodb.net/skincycle?retryWrites=true&w=majority`).
+
+### Step 3: Deploy on Render
+1. Go to [dashboard.render.com](https://dashboard.render.com) and click **New + > Web Service** (or use the blueprint with `render.yaml`).
+2. Connect your GitHub repository: `chitrakulkarni2830/skin-cycle`.
+3. Fill in the settings:
+   - **Name**: `skin-cycle`
+   - **Environment**: `Node`
+   - **Build Command**: `npm run build`
+   - **Start Command**: `npm start`
+4. Under **Environment Variables**, add:
+   - `NODE_ENV`: `production`
+   - `MONGODB_URI`: your MongoDB Atlas connection string
+   - `JWT_SECRET`: a secure secret key (e.g. `super_secret_production_key`)
+5. Click **Create Web Service**.
+
+Render will automatically run `npm run build` (installing dependencies and compiling the Vite client) and then start the Express server, serving the full-stack app on a single live URL!

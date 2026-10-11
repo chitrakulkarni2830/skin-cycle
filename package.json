@@ -1,0 +1,25 @@
+{
+  "name": "skin-cycle",
+  "version": "1.0.0",
+  "description": "SkinCycle Skincare Management Platform",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "install:all": "npm install --prefix server && npm install --prefix client",
+    "build": "npm install --prefix server && npm install --prefix client && npm run build --prefix client",
+    "build:client": "npm run build --prefix client",
+    "start": "node server/src/index.js",
+    "server": "npm run dev --prefix server",
+    "client": "npm run dev --prefix client",
+    "seed": "node server/src/seeds/productSeed.js && node server/src/seeds/conflictSeeds.js && node server/src/seeds/userSeed.js"
+  },
+  "keywords": [
+    "skincare",
+    "mern",
+    "vite",
+    "react",
+    "express"
+  ],
+  "author": "",
+  "license": "ISC"
+}
